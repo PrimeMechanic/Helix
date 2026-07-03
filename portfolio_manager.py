@@ -73,3 +73,41 @@ def buy_more_shares():
     print(f"\n✅ Purchased {additional_shares} shares of {ticker}")
     print(f"New Total Shares: {total_shares}")
     print(f"New Average Cost: ${new_average_cost:.2f}")
+
+def sell_shares():
+
+    portfolio = load_portfolio()
+
+    print("\n=== Sell Shares ===")
+
+    ticker = input("Ticker: ").upper()
+
+    if ticker not in portfolio:
+        print(f"\n{ticker} is not in your portfolio.")
+        return
+
+    current_shares = portfolio[ticker]["shares"]
+
+    print(f"\nCurrent Shares: {current_shares}")
+
+    shares_to_sell = float(input("Shares to Sell: "))
+
+    if shares_to_sell <= 0:
+        print("\nInvalid amount.")
+        return
+
+    if shares_to_sell > current_shares:
+        print("\nYou don't own that many shares.")
+        return
+
+    remaining = current_shares - shares_to_sell
+
+    if remaining == 0:
+        del portfolio[ticker]
+        print(f"\n✅ Sold entire position in {ticker}.")
+    else:
+        portfolio[ticker]["shares"] = remaining
+        print(f"\n✅ Sold {shares_to_sell} shares of {ticker}.")
+        print(f"Remaining Shares: {remaining}")
+
+    save_portfolio(portfolio)

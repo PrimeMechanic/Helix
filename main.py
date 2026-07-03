@@ -1,6 +1,10 @@
 import os
-from portfolio_manager import add_position, buy_more_shares
 
+from portfolio_manager import (
+    add_position,
+    buy_more_shares,
+    sell_shares
+)
 while True:
 
     os.system("cls")
@@ -34,7 +38,7 @@ while True:
         input("\nPress Enter to continue...")
 
     elif choice == "4":
-        print("\nComing Soon!")
+        sell_shares()
         input("\nPress Enter to continue...")
 
     elif choice == "5":
