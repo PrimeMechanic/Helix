@@ -1,0 +1,26 @@
+{
+    "META": {
+        "shares": 10.577,
+        "cost_basis": 622.0
+    },
+    "GOOGL": {
+        "shares": 11.613,
+        "cost_basis": 249.98
+    },
+    "TSM": {
+        "shares": 10.432,
+        "cost_basis": 315.82
+    },
+    "VOO": {
+        "shares": 5.836,
+        "cost_basis": 597.39
+    },
+    "DRAM": {
+        "shares": 9,
+        "cost_basis": 64.66
+    },
+    "AAPL": {
+        "shares": 2.0,
+        "cost_basis": 250.0
+    }
+}
