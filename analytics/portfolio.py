@@ -1,5 +1,5 @@
 from portfolio_manager import load_portfolio
-from market_data import get_current_price
+from market.market_data import get_current_price
 
 
 def display_portfolio():

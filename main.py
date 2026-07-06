@@ -1,11 +1,14 @@
 import os
-from ai_analysis import analyze_portfolio
+
+from analytics.portfolio import display_portfolio
+from analytics.ai_analysis import analyze_portfolio
 
 from portfolio_manager import (
     add_position,
     buy_more_shares,
     sell_shares
 )
+
 while True:
 
     os.system("cls")
