@@ -1,4 +1,5 @@
 import os
+from ai_analysis import analyze_portfolio
 
 from portfolio_manager import (
     add_position,
@@ -26,8 +27,9 @@ while True:
     choice = input("\nChoose an option: ")
 
     if choice == "1":
-        os.system("python portfolio.py")
+        display_portfolio()
         input("\nPress Enter to return to the menu...")
+
 
     elif choice == "2":
         add_position()
@@ -42,8 +44,8 @@ while True:
         input("\nPress Enter to continue...")
 
     elif choice == "5":
-        print("\nComing Soon!")
-        input("\nPress Enter to continue...")
+         analyze_portfolio()
+         input("\nPress Enter to continue...")
 
     elif choice == "6":
         print("\nComing Soon!")
