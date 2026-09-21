@@ -129,6 +129,8 @@ celerybeat.pid
 
 # Environments
 .env
+watchlist.json
+portfolio_history.json
 .venv
 env/
 venv/
