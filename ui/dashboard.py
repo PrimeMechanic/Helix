@@ -23,6 +23,7 @@ class DashboardPage(ctk.CTkFrame):
         ctk.CTkLabel(left, text="TOTAL PORTFOLIO VALUE", text_color="#9298A3", font=("Arial", 11, "bold")).pack(anchor="w")
         ctk.CTkLabel(left, text=f"${data['portfolio_value']:,.2f}", text_color="#F6F7F9", font=("Arial", 32, "bold")).pack(anchor="w", pady=(6, 2))
         ctk.CTkLabel(left, text=f"{data['portfolio_return']:+.2f}% unrealized return", text_color="#55D692" if data['portfolio_return'] >= 0 else "#FF7272", font=("Arial", 14, "bold")).pack(anchor="w")
+        ctk.CTkLabel(left, text=data.get('holdings_source', 'Manual portfolio'), text_color='#9298A3', font=('Arial', 11)).pack(anchor='w', pady=(6, 0))
         divider = ctk.CTkFrame(summary, width=1, fg_color="#30323A")
         divider.pack(side="left", fill="y", pady=22)
         right = ctk.CTkFrame(summary, fg_color="transparent", width=270)

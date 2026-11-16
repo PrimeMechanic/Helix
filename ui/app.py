@@ -10,6 +10,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ui.ai_page import AIPage
+from ui.research_hub import ResearchHub
 from ui.dashboard import DashboardPage
 from ui.data import load_dashboard_data
 from ui.financials_page import FinancialsPage
@@ -38,8 +39,8 @@ class HelixApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("HELIX — Investing Intelligence")
-        self.geometry("1360x820")
-        self.minsize(1050, 650)
+        self.geometry("1360x860")
+        self.minsize(1160, 800)
         self.analysis = None
         self.refreshing = False
         self.refresh_error = None
@@ -47,9 +48,8 @@ class HelixApp(ctk.CTk):
         self.page_name = "Dashboard"
 
         self.configure(fg_color=APP_BACKGROUND)
-        self.sidebar = ctk.CTkFrame(self, width=232, corner_radius=0, fg_color=SIDEBAR_BACKGROUND)
+        self.sidebar = ctk.CTkScrollableFrame(self, width=212, corner_radius=0, fg_color=SIDEBAR_BACKGROUND)
         self.sidebar.pack(side="left", fill="y")
-        self.sidebar.pack_propagate(False)
         self.content = ctk.CTkFrame(self, corner_radius=0, fg_color=APP_BACKGROUND)
         self.content.pack(side="right", fill="both", expand=True)
         self.current_page = None
@@ -69,7 +69,7 @@ class HelixApp(ctk.CTk):
             button.pack(fill="x", padx=16, pady=2)
             self.buttons[name] = button
         ctk.CTkLabel(self.sidebar, text="RESEARCH", font=("Arial", 10, "bold"), text_color=TEXT_MUTED).pack(anchor="w", padx=26, pady=(26, 8))
-        for name in ("Markets", "Financials", "News", "AI Analysis"):
+        for name in ("Research hub", "Markets", "Financials", "News"):
             button = ctk.CTkButton(
                 self.sidebar, text=name, anchor="w", height=42, corner_radius=8,
                 fg_color="transparent", text_color="#DFE2E7", hover_color="#202229",
@@ -122,6 +122,7 @@ class HelixApp(ctk.CTk):
         for name, button in self.buttons.items():
             button.configure(fg_color=NAV_ACTIVE if name == page_name else "transparent")
         pages = {
+            "Research hub": lambda: ResearchHub(self.content, self.analysis, self.refresh_data),
             "Dashboard": lambda: DashboardPage(self.content, self.analysis, self.refresh_data),
             "Portfolio": lambda: PortfolioPage(self.content, self.analysis),
             "Performance": lambda: PerformancePage(self.content, self.analysis),
