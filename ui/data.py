@@ -18,5 +18,5 @@ def load_dashboard_data():
             continue
         today_change += change["dollar"] * position["shares"]
         quote_count += 1
-    analysis["today_change"] = today_change if quote_count else None
+    analysis["today_change"] = today_change if quote_count == len(analysis["positions"]) else None
     return analysis

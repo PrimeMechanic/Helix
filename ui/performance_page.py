@@ -21,7 +21,7 @@ class PerformancePage(ctk.CTkFrame):
         title = ctk.CTkFrame(header, fg_color="transparent")
         title.pack(side="left")
         ctk.CTkLabel(title, text="Performance", text_color=TEXT, font=("Arial", 30, "bold")).pack(anchor="w")
-        ctk.CTkLabel(title, text="Your portfolio value, recorded locally each day you refresh HELIX.", text_color=MUTED, font=("Arial", 14)).pack(anchor="w", pady=(2, 0))
+        ctk.CTkLabel(title, text="Portfolio value history. Changes include purchases and sales; this is not an investment return.", text_color=MUTED, font=("Arial", 14)).pack(anchor="w", pady=(2, 0))
         if self.analysis:
             current = ctk.CTkFrame(header, fg_color="transparent")
             current.pack(side="right")
@@ -38,12 +38,12 @@ class PerformancePage(ctk.CTkFrame):
         detail.pack(fill="x", padx=42)
         if len(self.history) < 2:
             ctk.CTkLabel(detail, text="History starts today", text_color=TEXT, font=("Arial", 18, "bold")).pack(anchor="w", padx=22, pady=(18, 4))
-            ctk.CTkLabel(detail, text="Refresh HELIX on future days to build your actual portfolio-performance trend. HELIX does not invent historical returns.", text_color=MUTED, font=("Arial", 14), wraplength=760, justify="left").pack(anchor="w", padx=22, pady=(0, 18))
+            ctk.CTkLabel(detail, text="Refresh HELIX on future days to build your portfolio-value history. HELIX does not invent historical returns.", text_color=MUTED, font=("Arial", 14), wraplength=760, justify="left").pack(anchor="w", padx=22, pady=(0, 18))
         else:
             first, latest = self.history[0], self.history[-1]
             change = latest["value"] - first["value"]
             percentage = change / first["value"] * 100 if first["value"] else 0
-            ctk.CTkLabel(detail, text="Recorded performance", text_color=TEXT, font=("Arial", 18, "bold")).pack(anchor="w", padx=22, pady=(18, 4))
+            ctk.CTkLabel(detail, text="Portfolio value change", text_color=TEXT, font=("Arial", 18, "bold")).pack(anchor="w", padx=22, pady=(18, 4))
             color = POSITIVE if change >= 0 else "#FF7272"
             ctk.CTkLabel(detail, text=f"{change:+,.2f} ({percentage:+.2f}%) since {first['date']}", text_color=color, font=("Arial", 16, "bold")).pack(anchor="w", padx=22, pady=(0, 18))
 

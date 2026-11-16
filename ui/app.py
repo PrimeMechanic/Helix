@@ -1,5 +1,7 @@
 import os
 import sys
+import queue
+import threading
 
 import customtkinter as ctk
 
@@ -39,6 +41,8 @@ class HelixApp(ctk.CTk):
         self.geometry("1360x820")
         self.minsize(1050, 650)
         self.analysis = None
+        self.refreshing = False
+        self.refresh_error = None
         self.financials_ticker = None
         self.page_name = "Dashboard"
 
@@ -81,11 +85,35 @@ class HelixApp(ctk.CTk):
         self.refresh_data()
 
     def refresh_data(self):
-        self.analysis = load_dashboard_data()
-        if self.analysis:
-            from analytics.performance_history import record_snapshot
-            record_snapshot(self.analysis["portfolio_value"], self.analysis["portfolio_cost"])
+        if self.refreshing:
+            return
+        self.refreshing = True
+        result = queue.Queue()
+        def fetch():
+            try:
+                result.put((load_dashboard_data(), None))
+            except Exception as error:
+                result.put((None, str(error)))
+        threading.Thread(target=fetch, daemon=True).start()
         self.show_page(self.page_name)
+        def finish():
+            try:
+                analysis, error = result.get_nowait()
+            except queue.Empty:
+                self.after(100, finish)
+                return
+            self.refreshing = False
+            self.refresh_error = error
+            if error is None:
+                self.analysis = analysis
+                if analysis:
+                    from analytics.performance_history import record_snapshot
+                    try:
+                        record_snapshot(analysis["portfolio_value"], analysis["portfolio_cost"])
+                    except (OSError, ValueError) as failure:
+                        self.refresh_error = f"Prices updated, but history could not be saved: {failure}"
+            self.show_page(self.page_name)
+        self.after(100, finish)
 
     def show_page(self, page_name):
         self.page_name = page_name
@@ -105,6 +133,16 @@ class HelixApp(ctk.CTk):
             "News": lambda: NewsPage(self.content),
             "Settings": lambda: SettingsPage(self.content, self.refresh_data),
         }
+        if getattr(self, "status_label", None):
+            self.status_label.destroy()
+        status = "Refreshing portfolio…" if self.refreshing else self.refresh_error
+        if status:
+            if self.refresh_error and self.analysis:
+                status += " Displaying previously loaded prices."
+            self.status_label = ctk.CTkLabel(self.content, text=status, text_color="#FFD39A", wraplength=850)
+            self.status_label.pack(fill="x", padx=24, pady=8)
+        else:
+            self.status_label = None
         self.current_page = pages[page_name]()
         self.current_page.pack(fill="both", expand=True)
 

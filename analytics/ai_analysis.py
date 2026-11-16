@@ -1,3 +1,5 @@
+import math
+
 from portfolio_manager import load_portfolio
 from market.market_data import get_current_price
 
@@ -91,10 +93,13 @@ def get_portfolio_analysis():
         shares = info["shares"]
         cost_basis = info["cost_basis"]
 
+        if shares == 0:
+            continue
+
         current_price = get_current_price(ticker)
 
-        if current_price is None:
-            continue
+        if current_price is None or not math.isfinite(current_price) or current_price <= 0:
+            raise ValueError(f"Quote unavailable for {ticker}. Portfolio totals were not updated.")
 
         market_value = shares * current_price
         original_cost = shares * cost_basis
@@ -147,7 +152,7 @@ def get_portfolio_analysis():
     health_score = calculate_health_score(
         total_percent,
         largest_weight,
-        len(portfolio),
+        len(positions),
     )
 
     risk = determine_risk_level(largest_weight)
@@ -169,7 +174,7 @@ def get_portfolio_analysis():
             f"{largest['ticker']} is your dominant holding."
         )
 
-    if len(portfolio) < 5:
+    if len(positions) < 5:
         recommendations.append(
             "Increase diversification by adding more companies or ETFs."
         )
@@ -217,7 +222,11 @@ def get_portfolio_analysis():
 
 def analyze_portfolio():
 
-    analysis = get_portfolio_analysis()
+    try:
+        analysis = get_portfolio_analysis()
+    except (OSError, ValueError) as error:
+        print(f"Unable to analyze portfolio: {error}")
+        return
 
     if analysis is None:
         print("Unable to analyze portfolio.")

@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-from ui.theme import BACKGROUND, MUTED, NEGATIVE, POSITIVE, SURFACE, TABLE_HEADER, TEXT
+from ui.theme import BACKGROUND, MUTED, NEGATIVE, POSITIVE, SURFACE, SURFACE_ALT, TABLE_HEADER, TEXT
 
 
 class PortfolioPage(ctk.CTkFrame):
