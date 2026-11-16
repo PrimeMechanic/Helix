@@ -181,3 +181,9 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Local portfolio backups and research data
+portfolio.backup.*.json
+*.sqlite3
+*.sqlite3-*
+portfolio_source.json

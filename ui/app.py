@@ -1,5 +1,7 @@
 import os
 import sys
+import queue
+import threading
 
 import customtkinter as ctk
 
@@ -8,6 +10,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ui.ai_page import AIPage
+from ui.research_hub import ResearchHub
 from ui.dashboard import DashboardPage
 from ui.data import load_dashboard_data
 from ui.financials_page import FinancialsPage
@@ -36,16 +39,17 @@ class HelixApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("HELIX — Investing Intelligence")
-        self.geometry("1360x820")
-        self.minsize(1050, 650)
+        self.geometry("1360x860")
+        self.minsize(1160, 800)
         self.analysis = None
+        self.refreshing = False
+        self.refresh_error = None
         self.financials_ticker = None
         self.page_name = "Dashboard"
 
         self.configure(fg_color=APP_BACKGROUND)
-        self.sidebar = ctk.CTkFrame(self, width=232, corner_radius=0, fg_color=SIDEBAR_BACKGROUND)
+        self.sidebar = ctk.CTkScrollableFrame(self, width=212, corner_radius=0, fg_color=SIDEBAR_BACKGROUND)
         self.sidebar.pack(side="left", fill="y")
-        self.sidebar.pack_propagate(False)
         self.content = ctk.CTkFrame(self, corner_radius=0, fg_color=APP_BACKGROUND)
         self.content.pack(side="right", fill="both", expand=True)
         self.current_page = None
@@ -65,7 +69,7 @@ class HelixApp(ctk.CTk):
             button.pack(fill="x", padx=16, pady=2)
             self.buttons[name] = button
         ctk.CTkLabel(self.sidebar, text="RESEARCH", font=("Arial", 10, "bold"), text_color=TEXT_MUTED).pack(anchor="w", padx=26, pady=(26, 8))
-        for name in ("Markets", "Financials", "News", "AI Analysis"):
+        for name in ("Research hub", "Markets", "Financials", "News"):
             button = ctk.CTkButton(
                 self.sidebar, text=name, anchor="w", height=42, corner_radius=8,
                 fg_color="transparent", text_color="#DFE2E7", hover_color="#202229",
@@ -81,11 +85,35 @@ class HelixApp(ctk.CTk):
         self.refresh_data()
 
     def refresh_data(self):
-        self.analysis = load_dashboard_data()
-        if self.analysis:
-            from analytics.performance_history import record_snapshot
-            record_snapshot(self.analysis["portfolio_value"], self.analysis["portfolio_cost"])
+        if self.refreshing:
+            return
+        self.refreshing = True
+        result = queue.Queue()
+        def fetch():
+            try:
+                result.put((load_dashboard_data(), None))
+            except Exception as error:
+                result.put((None, str(error)))
+        threading.Thread(target=fetch, daemon=True).start()
         self.show_page(self.page_name)
+        def finish():
+            try:
+                analysis, error = result.get_nowait()
+            except queue.Empty:
+                self.after(100, finish)
+                return
+            self.refreshing = False
+            self.refresh_error = error
+            if error is None:
+                self.analysis = analysis
+                if analysis:
+                    from analytics.performance_history import record_snapshot
+                    try:
+                        record_snapshot(analysis["portfolio_value"], analysis["portfolio_cost"])
+                    except (OSError, ValueError) as failure:
+                        self.refresh_error = f"Prices updated, but history could not be saved: {failure}"
+            self.show_page(self.page_name)
+        self.after(100, finish)
 
     def show_page(self, page_name):
         self.page_name = page_name
@@ -94,6 +122,7 @@ class HelixApp(ctk.CTk):
         for name, button in self.buttons.items():
             button.configure(fg_color=NAV_ACTIVE if name == page_name else "transparent")
         pages = {
+            "Research hub": lambda: ResearchHub(self.content, self.analysis, self.refresh_data),
             "Dashboard": lambda: DashboardPage(self.content, self.analysis, self.refresh_data),
             "Portfolio": lambda: PortfolioPage(self.content, self.analysis),
             "Performance": lambda: PerformancePage(self.content, self.analysis),
@@ -105,6 +134,16 @@ class HelixApp(ctk.CTk):
             "News": lambda: NewsPage(self.content),
             "Settings": lambda: SettingsPage(self.content, self.refresh_data),
         }
+        if getattr(self, "status_label", None):
+            self.status_label.destroy()
+        status = "Refreshing portfolio…" if self.refreshing else self.refresh_error
+        if status:
+            if self.refresh_error and self.analysis:
+                status += " Displaying previously loaded prices."
+            self.status_label = ctk.CTkLabel(self.content, text=status, text_color="#FFD39A", wraplength=850)
+            self.status_label.pack(fill="x", padx=24, pady=8)
+        else:
+            self.status_label = None
         self.current_page = pages[page_name]()
         self.current_page.pack(fill="both", expand=True)
 

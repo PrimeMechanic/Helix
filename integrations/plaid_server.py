@@ -39,6 +39,8 @@ def _blob(data):
 
 def protect_for_current_windows_user(value):
     """Encrypt bytes with Windows DPAPI; only this Windows user can decrypt them."""
+    if os.name != "nt":
+        raise RuntimeError("Brokerage token storage requires Windows DPAPI.")
     source, keepalive = _blob(value)
     target = DataBlob()
     if not ctypes.windll.crypt32.CryptProtectData(
@@ -52,6 +54,8 @@ def protect_for_current_windows_user(value):
 
 
 def unprotect_for_current_windows_user(value):
+    if os.name != "nt":
+        raise RuntimeError("Brokerage token storage requires Windows DPAPI.")
     source, keepalive = _blob(value)
     target = DataBlob()
     if not ctypes.windll.crypt32.CryptUnprotectData(
@@ -107,21 +111,9 @@ def response_dict(response):
 
 
 def normalize_holdings(payload):
-    securities = {security["security_id"]: security for security in payload.get("securities", [])}
-    positions = []
-    for holding in payload.get("holdings", []):
-        security = securities.get(holding["security_id"], {})
-        ticker = security.get("ticker_symbol")
-        if not ticker:
-            continue
-        positions.append({
-            "ticker": ticker.upper(),
-            "shares": holding.get("quantity", 0),
-            "cost_basis": holding.get("cost_basis", 0) or 0,
-            "current_value": holding.get("institution_value"),
-            "name": security.get("name", ticker),
-        })
-    return positions
+    from integrations.holdings import normalize_snapshot
+    snapshot = normalize_snapshot(payload)
+    return [{"ticker": ticker, **position} for ticker, position in snapshot["positions"].items()]
 
 
 app = Flask(__name__)
@@ -132,6 +124,17 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Strict",
 )
+
+
+@app.before_request
+def validate_local_origin():
+    if request.host != "127.0.0.1:8765":
+        return jsonify({"error": "Invalid local host."}), 403
+    origin = request.headers.get("Origin")
+    if origin and origin != LOCAL_URL:
+        return jsonify({"error": "Invalid local origin."}), 403
+    if request.headers.get("Sec-Fetch-Site") == "cross-site":
+        return jsonify({"error": "Cross-site access denied."}), 403
 
 
 @app.after_request
@@ -208,7 +211,8 @@ def holdings():
     try:
         client = create_client()
         response = response_dict(client.investments_holdings_get(InvestmentsHoldingsGetRequest(access_token=item["access_token"])))
-        return jsonify({"positions": normalize_holdings(response)})
+        from integrations.holdings import normalize_snapshot
+        return jsonify(normalize_snapshot(response, os.environ.get("PLAID_ENV", "sandbox")))
     except Exception as error:
         return jsonify({"error": str(error)}), 400
 

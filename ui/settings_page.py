@@ -28,7 +28,7 @@ class SettingsPage(ctk.CTkFrame):
         ctk.CTkLabel(brokerage, text="Brokerage connection", text_color=TEXT, font=("Arial", 19, "bold")).pack(anchor="w", padx=22, pady=(18, 4))
         ctk.CTkLabel(
             brokerage,
-            text="Connect through Plaid's browser-based, holdings-only flow. The local connector must be running first.",
+            text="Connect through Plaid's browser-based, holdings-only flow. The local connector must be running first. After connecting, open Research hub → Brokerage to preview and import supported holdings.",
             text_color=MUTED, font=("Arial", 14), wraplength=700, justify="left"
         ).pack(anchor="w", padx=22, pady=(0, 14))
         ctk.CTkButton(

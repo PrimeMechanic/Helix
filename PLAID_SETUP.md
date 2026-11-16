@@ -21,3 +21,9 @@ only read access to investment holdings. If a consent screen requests trading,
 money transfers, or account changes, cancel it.
 
 `POST /api/disconnect` revokes the Plaid Item and deletes the local encrypted token.
+
+## Preview and import into the desktop
+
+After linking, open Research hub → Brokerage → Preview holdings. Inspect the environment and exclusions, then choose Import preview and confirm replacement. Supported holdings replace `portfolio.json` only after a timestamped backup is created. Refresh the portfolio from Settings afterward. Sandbox imports are labeled on the dashboard. This is a manual snapshot import, not ongoing synchronization.
+
+Total cost basis is converted to per-share cost. Long USD equities, ETFs and mutual funds are supported. Cash, options, shorts, non-USD and missing-basis holdings block import rather than silently producing incomplete totals. Brokerage tokens and account identifiers are never sent to AI reports.
