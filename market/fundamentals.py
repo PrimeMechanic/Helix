@@ -83,8 +83,8 @@ def _health_profile(financials, company_info):
     net_margin = _ratio(net_income, revenue)
     operating_margin = _ratio(operating_income, revenue)
     roa = _ratio(net_income, assets)
-    roe = _ratio(net_income, equity)
-    debt_to_equity = _ratio(debt, equity)
+    roe = _ratio(net_income, equity) if equity is not None and equity > 0 else None
+    debt_to_equity = _ratio(debt, equity) if equity is not None and equity > 0 else None
     current_ratio = _ratio(current_assets, current_liabilities)
     cash_to_debt = _ratio(cash, debt)
     fcf_margin = _ratio(free_cash, revenue)
@@ -213,6 +213,8 @@ def _health_profile(financials, company_info):
     complete = sum(pillar["score"] is not None for pillar in pillars)
 
     flags = []
+    if equity is not None and equity <= 0:
+        flags.append("Equity is zero or negative; equity-based ratios cannot indicate financial strength.")
     if revenue_growth is not None and revenue_growth < 0:
         flags.append("Annual revenue declined in the latest reported year.")
     if net_income is not None and net_income < 0:
@@ -284,7 +286,7 @@ def _series(statement, labels, periods):
     for index, item in enumerate(values):
         previous = values[index + 1]["value"] if index + 1 < len(values) else None
         current = item["value"]
-        item["yoy"] = ((current / previous) - 1) * 100 if current is not None and previous not in (None, 0) else None
+        item["yoy"] = ((current - previous) / abs(previous)) * 100 if current is not None and previous not in (None, 0) else None
     return values
 
 

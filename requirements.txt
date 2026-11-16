@@ -1,0 +1,2 @@
+customtkinter>=5.2,<6
+yfinance>=0.2.54,<1
